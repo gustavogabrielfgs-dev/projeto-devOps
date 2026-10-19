@@ -45,5 +45,5 @@ jobs:
         run: |
           sleep 5
           docker ps
-          curl --fail --silent --show-error http://localhost:8081 \
+          curl --fail --silent --show-error http://localhost:8083 \
             | grep 'Minha infraestrutura fala com o banco de dados!'

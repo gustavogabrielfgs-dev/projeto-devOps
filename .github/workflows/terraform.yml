@@ -1,0 +1,49 @@
+
+name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  terraform:
+    name: Validar e provisionar
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_postgres_password: ${{ secrets.TF_VAR_postgres_password }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.6
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Format
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -input=false
+
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve -input=false
+
+      - name: Smoke Test
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          sleep 5
+          docker ps
+          curl --fail --silent --show-error http://localhost:8081 \
+            | grep 'Minha infraestrutura fala com o banco de dados!'
